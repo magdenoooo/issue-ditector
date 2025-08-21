@@ -197,14 +197,13 @@ function App() {
             </div>
             <div className="grid md:grid-cols-2 gap-6 max-w-2xl mx-auto">
               <OptionButton
-              {flowState.deviceType === 'computer' || !flowState.deviceType ? (
+                icon={Monitor}
                 label="كمبيوتر"
                 onClick={() => handleDeviceSelection('computer')}
                 isSelected={flowState.deviceType === 'computer'}
                 delay={100}
               />
               <OptionButton
-                    isDisabled={!flowState.operatingSystem || flowState.deviceType !== 'computer'}
                 icon={Smartphone}
                 label="هاتف محمول"
                 onClick={() => handleDeviceSelection('mobile')}
@@ -212,54 +211,46 @@ function App() {
                 delay={200}
               />
             </div>
-                    isDisabled={!flowState.operatingSystem || flowState.deviceType !== 'computer'}
           </section>
 
           {/* Step 2: Operating System */}
-          <section className="animate-fadeIn">
+          {flowState.deviceType && (
             <section className="animate-fadeIn">
               <div className="text-center mb-8">
                 <h2 className="text-3xl font-bold text-gray-900 mb-4">
-                    isDisabled={!flowState.operatingSystem || flowState.deviceType !== 'computer'}
                   ما نظام التشغيل الذي تستخدمه؟
                 </h2>
                 <p className="text-gray-600 text-lg">
-              )}
-              {flowState.deviceType === 'mobile' || !flowState.deviceType ? (
+                  اختر نظام التشغيل المناسب لجهازك
                 </p>
               </div>
               
               <div className="grid md:grid-cols-2 gap-6 max-w-2xl mx-auto">
-              {flowState.deviceType === 'computer' || !flowState.deviceType ? (
+                {flowState.deviceType === 'computer' && (
                   <>
-                    isDisabled={!flowState.operatingSystem || flowState.deviceType !== 'mobile'}
                     <OptionButton
                       icon={Windows}
                       label="ويندوز"
                       onClick={() => handleOSSelection('windows')}
                       isSelected={flowState.operatingSystem === 'windows'}
-                    isDisabled={!flowState.deviceType || flowState.deviceType !== 'computer'}
                       delay={100}
-                    isDisabled={!flowState.operatingSystem || flowState.deviceType !== 'mobile'}
                     />
                     <OptionButton
                       icon={Linux}
                       label="لينكس"
                       onClick={() => handleOSSelection('linux')}
                       isSelected={flowState.operatingSystem === 'linux'}
-                    isDisabled={!flowState.deviceType || flowState.deviceType !== 'computer'}
-                    isDisabled={!flowState.operatingSystem || flowState.deviceType !== 'mobile'}
                       delay={200}
                     />
                   </>
-              )}
-              {flowState.deviceType === 'mobile' || !flowState.deviceType ? (
-          </section>
+                )}
+                {flowState.deviceType === 'mobile' && (
+                  <>
+                    <OptionButton
                       icon={AndroidIcon}
                       label="أندرويد"
                       onClick={() => handleOSSelection('android')}
                       isSelected={flowState.operatingSystem === 'android'}
-                    isDisabled={!flowState.deviceType || flowState.deviceType !== 'mobile'}
                       delay={100}
                     />
                     <OptionButton
@@ -267,16 +258,16 @@ function App() {
                       label="آي أو إس"
                       onClick={() => handleOSSelection('ios')}
                       isSelected={flowState.operatingSystem === 'ios'}
-                    isDisabled={!flowState.deviceType || flowState.deviceType !== 'mobile'}
                       delay={200}
                     />
                   </>
                 )}
               </div>
-          </section>
+            </section>
+          )}
 
           {/* Step 3: Problem Selection */}
-          <section className="animate-fadeIn">
+          {flowState.operatingSystem && (
             <section className="animate-fadeIn">
               <div className="text-center mb-8">
                 <h2 className="text-3xl font-bold text-gray-900 mb-4">
