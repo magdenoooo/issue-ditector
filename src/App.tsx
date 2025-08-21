@@ -1,8 +1,15 @@
-import React, { useState } from 'react';
-import { ArrowRight, Monitor, Smartphone, AppWindow as Windows, Zap as Linux, Apple, Battery, Wifi, AlertCircle, Gauge, Eye, Power } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Monitor, Smartphone, Windows, Zap as Linux, Apple, Battery, Wifi, AlertCircle, Gauge, Eye, Power, FileText, Copyright } from 'lucide-react';
+
+// Android icon component
+const AndroidIcon = ({ size = 24, className = "" }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className}>
+    <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/>
+    <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>
+  </svg>
+);
 
 interface FlowState {
-  step: number;
   deviceType: string;
   operatingSystem: string;
   problem: string;
@@ -10,17 +17,44 @@ interface FlowState {
 
 function App() {
   const [flowState, setFlowState] = useState<FlowState>({
-    step: 1,
     deviceType: '',
     operatingSystem: '',
     problem: ''
   });
 
+  const [availableOS, setAvailableOS] = useState<string[]>([]);
+  const [availableProblems, setAvailableProblems] = useState<string[]>([]);
+
+  // Update available options when device type changes
+  useEffect(() => {
+    if (flowState.deviceType === 'computer') {
+      setAvailableOS(['windows', 'linux']);
+      setAvailableProblems(['slow_performance', 'screen_issue', 'not_working']);
+    } else if (flowState.deviceType === 'mobile') {
+      setAvailableOS(['android', 'ios']);
+      setAvailableProblems(['battery', 'screen', 'network']);
+    } else {
+      setAvailableOS([]);
+      setAvailableProblems([]);
+    }
+    
+    // Reset dependent selections when device changes
+    if (flowState.operatingSystem && !availableOS.includes(flowState.operatingSystem)) {
+      setFlowState(prev => ({ ...prev, operatingSystem: '', problem: '' }));
+    }
+  }, [flowState.deviceType, availableOS]);
+
+  // Reset problem when OS changes
+  useEffect(() => {
+    if (flowState.operatingSystem && flowState.problem && !availableProblems.includes(flowState.problem)) {
+      setFlowState(prev => ({ ...prev, problem: '' }));
+    }
+  }, [flowState.operatingSystem, availableProblems, flowState.problem]);
+
   const handleDeviceSelection = (device: string) => {
     setFlowState(prev => ({
       ...prev,
       deviceType: device,
-      step: 2,
       operatingSystem: '',
       problem: ''
     }));
@@ -30,7 +64,6 @@ function App() {
     setFlowState(prev => ({
       ...prev,
       operatingSystem: os,
-      step: 3,
       problem: ''
     }));
   };
@@ -38,32 +71,16 @@ function App() {
   const handleProblemSelection = (problem: string) => {
     setFlowState(prev => ({
       ...prev,
-      problem: problem,
-      step: 4
+      problem: problem
     }));
-  };
-
-  const goBack = () => {
-    if (flowState.step === 2) {
-      setFlowState(prev => ({ ...prev, step: 1, deviceType: '', operatingSystem: '', problem: '' }));
-    } else if (flowState.step === 3) {
-      setFlowState(prev => ({ ...prev, step: 2, operatingSystem: '', problem: '' }));
-    } else if (flowState.step === 4) {
-      setFlowState(prev => ({ ...prev, step: 3, problem: '' }));
-    }
   };
 
   const restart = () => {
     setFlowState({
-      step: 1,
       deviceType: '',
       operatingSystem: '',
       problem: ''
     });
-  };
-
-  const getProgressWidth = () => {
-    return `${(flowState.step / 4) * 100}%`;
   };
 
   const getDeviceLabel = (device: string) => {
@@ -96,35 +113,65 @@ function App() {
     icon: Icon, 
     label, 
     onClick, 
+    isSelected = false,
+    isDisabled = false,
     delay = 0 
   }: { 
     icon: React.ComponentType<any>, 
     label: string, 
     onClick: () => void, 
+    isSelected?: boolean,
+    isDisabled?: boolean,
     delay?: number 
   }) => (
     <button
       onClick={onClick}
-      className={`group relative overflow-hidden bg-white rounded-2xl p-8 shadow-lg border border-gray-200 hover:border-blue-300 hover:shadow-xl transition-all duration-500 ease-out transform hover:scale-105 animate-slideIn`}
+      disabled={isDisabled}
+      className={`group relative overflow-hidden rounded-2xl p-6 shadow-lg border transition-all duration-500 ease-out transform hover:scale-105 animate-slideIn ${
+        isSelected 
+          ? 'bg-blue-600 border-blue-700 text-white shadow-blue-200' 
+          : isDisabled
+          ? 'bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed'
+          : 'bg-white border-gray-200 hover:border-blue-300 hover:shadow-xl'
+      }`}
       style={{ animationDelay: `${delay}ms` }}
     >
-      <div className="flex flex-col items-center space-y-4">
-        <div className="p-4 rounded-full bg-gradient-to-br from-blue-50 to-indigo-50 group-hover:from-blue-100 group-hover:to-indigo-100 transition-all duration-300">
-          <Icon size={32} className="text-blue-600 group-hover:text-blue-700 transition-colors duration-300" />
+      <div className="flex flex-col items-center space-y-3">
+        <div className={`p-3 rounded-full transition-all duration-300 ${
+          isSelected 
+            ? 'bg-white/20' 
+            : isDisabled
+            ? 'bg-gray-200'
+            : 'bg-gradient-to-br from-blue-50 to-indigo-50 group-hover:from-blue-100 group-hover:to-indigo-100'
+        }`}>
+          <Icon size={28} className={`transition-colors duration-300 ${
+            isSelected 
+              ? 'text-white' 
+              : isDisabled
+              ? 'text-gray-400'
+              : 'text-blue-600 group-hover:text-blue-700'
+          }`} />
         </div>
-        <span className="text-lg font-semibold text-gray-800 group-hover:text-blue-900 transition-colors duration-300">
+        <span className={`text-base font-semibold transition-colors duration-300 ${
+          isSelected 
+            ? 'text-white' 
+            : isDisabled
+            ? 'text-gray-400'
+            : 'text-gray-800 group-hover:text-blue-900'
+        }`}>
           {label}
         </span>
       </div>
-      <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-600 opacity-0 group-hover:opacity-5 transition-opacity duration-300 rounded-2xl" />
     </button>
   );
 
+  const isComplete = flowState.deviceType && flowState.operatingSystem && flowState.problem;
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
       {/* Header */}
       <header className="w-full px-6 py-8">
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-6xl mx-auto">
           <h1 className="text-4xl font-bold text-center bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-2">
             مساعد الدعم التقني
           </h1>
@@ -134,84 +181,65 @@ function App() {
         </div>
       </header>
 
-      {/* Progress Bar */}
-      <div className="w-full px-6 mb-8">
-        <div className="max-w-4xl mx-auto">
-          <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-            <div 
-              className="h-full bg-gradient-to-r from-blue-600 to-indigo-600 transition-all duration-500 ease-out rounded-full"
-              style={{ width: getProgressWidth() }}
-            />
-          </div>
-          <div className="flex justify-between mt-2 text-sm text-gray-500">
-            <span>البداية</span>
-            <span>{Math.round((flowState.step / 4) * 100)}% مكتمل</span>
-            <span>الحل</span>
-          </div>
-        </div>
-      </div>
-
       {/* Main Content */}
-      <main className="flex-1 flex items-center justify-center px-6">
-        <div className="max-w-4xl w-full">
+      <main className="px-6 pb-8">
+        <div className="max-w-6xl mx-auto space-y-12">
           
           {/* Step 1: Device Type */}
-          {flowState.step === 1 && (
-            <div className="text-center animate-fadeIn">
+          <section className="animate-fadeIn">
+            <div className="text-center mb-8">
               <h2 className="text-3xl font-bold text-gray-900 mb-4">
                 ما نوع الجهاز الذي تستخدمه؟
               </h2>
-              <p className="text-gray-600 mb-12 text-lg">
+              <p className="text-gray-600 text-lg">
                 اختر الجهاز الذي تواجه مشكلة معه
               </p>
-              <div className="grid md:grid-cols-2 gap-8 max-w-2xl mx-auto">
-                <OptionButton
-                  icon={Monitor}
-                  label="كمبيوتر"
-                  onClick={() => handleDeviceSelection('computer')}
-                  delay={100}
-                />
-                <OptionButton
-                  icon={Smartphone}
-                  label="هاتف محمول"
-                  onClick={() => handleDeviceSelection('mobile')}
-                  delay={200}
-                />
-              </div>
             </div>
-          )}
+            <div className="grid md:grid-cols-2 gap-6 max-w-2xl mx-auto">
+              <OptionButton
+                icon={Monitor}
+                label="كمبيوتر"
+                onClick={() => handleDeviceSelection('computer')}
+                isSelected={flowState.deviceType === 'computer'}
+                delay={100}
+              />
+              <OptionButton
+                icon={Smartphone}
+                label="هاتف محمول"
+                onClick={() => handleDeviceSelection('mobile')}
+                isSelected={flowState.deviceType === 'mobile'}
+                delay={200}
+              />
+            </div>
+          </section>
 
           {/* Step 2: Operating System */}
-          {flowState.step === 2 && (
-            <div className="text-center animate-fadeIn">
-              <button
-                onClick={goBack}
-                className="inline-flex items-center text-blue-600 hover:text-blue-700 mb-8 group transition-colors duration-200"
-              >
-                <ArrowRight size={20} className="ml-2 group-hover:translate-x-1 transition-transform duration-200" />
-                العودة لاختيار الجهاز
-              </button>
+          {flowState.deviceType && (
+            <section className="animate-fadeIn">
+              <div className="text-center mb-8">
+                <h2 className="text-3xl font-bold text-gray-900 mb-4">
+                  ما نظام التشغيل الذي تستخدمه؟
+                </h2>
+                <p className="text-gray-600 text-lg">
+                  اختر نظام تشغيل {getDeviceLabel(flowState.deviceType)}
+                </p>
+              </div>
               
-              <h2 className="text-3xl font-bold text-gray-900 mb-4">
-                ما نظام التشغيل الذي تستخدمه؟
-              </h2>
-              <p className="text-gray-600 mb-12 text-lg">
-                اختر نظام تشغيل {getDeviceLabel(flowState.deviceType)}
-              </p>
-              
-              <div className="grid md:grid-cols-2 gap-8 max-w-2xl mx-auto">
+              <div className="grid md:grid-cols-2 gap-6 max-w-2xl mx-auto">
                 {flowState.deviceType === 'computer' ? (
                   <>
                     <OptionButton
                       icon={Windows}
                       label="ويندوز"
                       onClick={() => handleOSSelection('windows')}
+                      isSelected={flowState.operatingSystem === 'windows'}
                       delay={100}
                     />
                     <OptionButton
                       icon={Linux}
                       label="لينكس"
                       onClick={() => handleOSSelection('linux')}
+                      isSelected={flowState.operatingSystem === 'linux'}
                       delay={200}
                     />
                   </>
@@ -221,37 +249,33 @@ function App() {
                       icon={AndroidIcon}
                       label="أندرويد"
                       onClick={() => handleOSSelection('android')}
+                      isSelected={flowState.operatingSystem === 'android'}
                       delay={100}
                     />
                     <OptionButton
                       icon={Apple}
                       label="آي أو إس"
                       onClick={() => handleOSSelection('ios')}
+                      isSelected={flowState.operatingSystem === 'ios'}
                       delay={200}
                     />
                   </>
                 )}
               </div>
-            </div>
+            </section>
           )}
 
           {/* Step 3: Problem Selection */}
-          {flowState.step === 3 && (
-            <div className="text-center animate-fadeIn">
-              <button
-                onClick={goBack}
-                className="inline-flex items-center text-blue-600 hover:text-blue-700 mb-8 group transition-colors duration-200"
-              >
-                <ArrowRight size={20} className="ml-2 group-hover:translate-x-1 transition-transform duration-200" />
-                العودة لاختيار نظام التشغيل
-              </button>
-              
-              <h2 className="text-3xl font-bold text-gray-900 mb-4">
-                ما المشكلة التي تواجهها؟
-              </h2>
-              <p className="text-gray-600 mb-12 text-lg">
-                صف المشكلة في {getDeviceLabel(flowState.deviceType)}
-              </p>
+          {flowState.operatingSystem && (
+            <section className="animate-fadeIn">
+              <div className="text-center mb-8">
+                <h2 className="text-3xl font-bold text-gray-900 mb-4">
+                  ما المشكلة التي تواجهها؟
+                </h2>
+                <p className="text-gray-600 text-lg">
+                  صف المشكلة في {getDeviceLabel(flowState.deviceType)}
+                </p>
+              </div>
               
               <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
                 {flowState.deviceType === 'computer' ? (
@@ -260,18 +284,21 @@ function App() {
                       icon={Gauge}
                       label="أداء بطيء"
                       onClick={() => handleProblemSelection('slow_performance')}
+                      isSelected={flowState.problem === 'slow_performance'}
                       delay={100}
                     />
                     <OptionButton
                       icon={Eye}
                       label="مشكلة في الشاشة"
                       onClick={() => handleProblemSelection('screen_issue')}
+                      isSelected={flowState.problem === 'screen_issue'}
                       delay={200}
                     />
                     <OptionButton
                       icon={Power}
                       label="لا يعمل"
                       onClick={() => handleProblemSelection('not_working')}
+                      isSelected={flowState.problem === 'not_working'}
                       delay={300}
                     />
                   </>
@@ -281,35 +308,38 @@ function App() {
                       icon={Battery}
                       label="البطارية"
                       onClick={() => handleProblemSelection('battery')}
+                      isSelected={flowState.problem === 'battery'}
                       delay={100}
                     />
                     <OptionButton
                       icon={Eye}
                       label="الشاشة"
                       onClick={() => handleProblemSelection('screen')}
+                      isSelected={flowState.problem === 'screen'}
                       delay={200}
                     />
                     <OptionButton
                       icon={Wifi}
                       label="الشبكة"
                       onClick={() => handleProblemSelection('network')}
+                      isSelected={flowState.problem === 'network'}
                       delay={300}
                     />
                   </>
                 )}
               </div>
-            </div>
+            </section>
           )}
 
-          {/* Step 4: Results */}
-          {flowState.step === 4 && (
-            <div className="text-center animate-fadeIn">
+          {/* Results */}
+          {isComplete && (
+            <section className="animate-fadeIn">
               <div className="bg-white rounded-3xl p-10 shadow-xl border border-gray-200 max-w-2xl mx-auto">
                 <div className="w-20 h-20 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
                   <AlertCircle size={40} className="text-white" />
                 </div>
                 
-                <h2 className="text-3xl font-bold text-gray-900 mb-4">
+                <h2 className="text-3xl font-bold text-gray-900 mb-4 text-center">
                   تم العثور على الحل!
                 </h2>
                 
@@ -331,7 +361,7 @@ function App() {
                   </div>
                 </div>
                 
-                <p className="text-gray-600 mb-8 text-lg">
+                <p className="text-gray-600 mb-8 text-lg text-center">
                   بناءً على اختياراتك، تمكنا من تحديد أفضل خطوات استكشاف الأخطاء وإصلاحها لمشكلتك المحددة.
                 </p>
                 
@@ -347,14 +377,38 @@ function App() {
                   </button>
                 </div>
               </div>
-            </div>
+            </section>
           )}
+
+          {/* Notes Card */}
+          <section className="animate-fadeIn">
+            <div className="bg-amber-50 border border-amber-200 rounded-2xl p-8 max-w-4xl mx-auto">
+              <div className="flex items-center mb-4">
+                <FileText className="text-amber-600 ml-3" size={24} />
+                <h3 className="text-xl font-bold text-amber-800">ملاحظات مهمة</h3>
+              </div>
+              <div className="text-amber-700 space-y-3">
+                <p>• تأكد من حفظ جميع ملفاتك المهمة قبل تطبيق أي حلول تقنية</p>
+                <p>• في حالة عدم نجاح الحلول المقترحة، لا تتردد في التواصل مع فريق الدعم التقني</p>
+                <p>• يُنصح بإجراء نسخة احتياطية دورية لبياناتك لتجنب فقدانها</p>
+                <p>• بعض المشاكل قد تتطلب تدخل فني متخصص، خاصة المشاكل المتعلقة بالأجهزة</p>
+              </div>
+            </div>
+          </section>
         </div>
       </main>
 
-      {/* Footer */}
-      <footer className="w-full px-6 py-8 text-center text-gray-500">
-        <p>تحتاج مساعدة إضافية؟ تواصل مع فريق الدعم في أي وقت.</p>
+      {/* Footer with Copyright */}
+      <footer className="w-full px-6 py-8 bg-gray-50 border-t border-gray-200">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center space-y-4">
+            <p className="text-gray-600">تحتاج مساعدة إضافية؟ تواصل مع فريق الدعم في أي وقت.</p>
+            <div className="flex items-center justify-center text-gray-500">
+              <Copyright size={16} className="ml-2" />
+              <span className="text-sm">جميع الحقوق محفوظة © 2025 - مجدي عاطف زهران</span>
+            </div>
+          </div>
+        </div>
       </footer>
     </div>
   );
