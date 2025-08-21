@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Monitor, Smartphone, Windows, Zap as Linux, Apple, Battery, Wifi, AlertCircle, Gauge, Eye, Power, FileText, Copyright } from 'lucide-react';
+import { Monitor, Smartphone, AppWindow as Windows, Zap as Linux, Apple, Battery, Wifi, AlertCircle, Gauge, Eye, Power, FileText, Copyright } from 'lucide-react';
 
 // Android icon component
 const AndroidIcon = ({ size = 24, className = "" }) => (
